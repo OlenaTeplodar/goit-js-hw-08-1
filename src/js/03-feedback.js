@@ -1,52 +1,47 @@
 import throttle from 'lodash.throttle';
 
+const STORAGE_KEY = 'feedback-form-state';
+
 const refs = {
     form: document.querySelector('.feedback-form'),
 };
 
-const LOCALSTORAGE_KEY = 'feedback-form-state';
+const formData = {};
 
-const load = key => {
-    try {
-    const serializedState = localStorage.getItem(key);
-    return serializedState === null ? undefined : JSON.parse(serializedState);
-    } catch (error) {
-    console.error('Get state error: ', error.message);
+refs.form.addEventListener('submit', onFormSubmit);
+refs.form.addEventListener('input', throttle(onFormLocalStorage, 500));
+
+function getData() {
+        try {
+            const dataJSON = localStorage.getItem(STORAGE_KEY);
+
+            if (!dataJSON) return;
+
+            const formData = JSON.parse(dataJSON);
+
+            const keys = Object.keys(formData);
+
+            for (let key of keys) {
+                refs.form.elements[key].value = formData[key];
+            }
+        }
+        catch (error) {
+            console.log(error.message);
+        }
     }
-};
 
-const save = (key, value) => {
-    try {
-    const serializedState = JSON.stringify(value);
-    localStorage.setItem(key, serializedState);
-    } catch (error) {
-    console.error('Set state error: ', error.message);
-    }
-};
+getData();
 
-function onInputForm(e) {
+function onFormLocalStorage(e) {
+    formData[e.target.name] = e.target.value;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+}
+
+function onFormSubmit(e) {
     e.preventDefault();
-    const email = refs.form.elements.email.value;
-    const message = refs.form.elements.message.value;
-    save(LOCALSTORAGE_KEY, { message, email });
-}
+    console.log(formData);
 
-function onSubmitForm(e) {
-    const savedSettings = localStorage.getItem(LOCALSTORAGE_KEY);
-    console.log(
-    'email: ' + savedSettings.email + 'message: ' + savedSettings.message
-    );
-    localStorage.removeItem(LOCALSTORAGE_KEY);
-    refs.form.reset();
-}
+    e.currentTarget.reset();
 
-function onLoadForm(e) {
-    e.preventDefault();
-    const parsedSettings = load(LOCALSTORAGE_KEY);
-    refs.form.elements.email.value = parsedSettings.email;
-    refs.form.elements.message.value = parsedSettings.message;
+    localStorage.removeItem(STORAGE_KEY);
 }
-
-refs.form.addEventListener('input', throttle(onInputForm, 500));
-refs.form.addEventListener('submit', onSubmitForm);
-window.addEventListener('load', onLoadForm);

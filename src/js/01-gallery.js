@@ -24,16 +24,6 @@ function createGalleryCardsMarkup(items) {
 
 galleryContainer.insertAdjacentHTML('beforeend', cardsMarkup);
 
-galleryContainer.addEventListener('click', onClickGalleryImages);
-
-function onClickGalleryImages(event) {
-    event.preventDefault();
-    if (event.target.nodeName !== 'IMG') {
-    return;
-    }
-    galleryCreate();
-}
-
 const galleryCreate = new SimpleLightbox('.gallery a', {
     captionsData: 'alt',
     captionDelay: 250,
